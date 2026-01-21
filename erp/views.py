@@ -230,7 +230,12 @@ def teacher_edit_homework(request, pk):
             return redirect('teacher_homeworks', pk=homework.group.id)
     else:
         form = HomeworkForm(instance=homework)
-    return render(request, 'erp/teacher/homework_form.html', {'form': form, 'homework': homework})
+
+    return render(request, 'erp/teacher/homework_form.html', {
+        'form': form, 
+        'homework': homework,
+        'group': homework.group  
+    })
 
 @login_required
 def teacher_submissions(request, pk):

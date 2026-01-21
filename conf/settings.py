@@ -133,3 +133,4 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # Login URL
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
+
