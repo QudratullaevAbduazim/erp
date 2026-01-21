@@ -2,7 +2,6 @@
 
 {% block content %}
 <div class="card" style="height: 80vh;">
-    <!-- Chat Header -->
     <div class="card-header bg-white border-bottom">
         <div class="d-flex align-items-center">
             <a href="{% url 'chat_list' %}" class="btn btn-outline-secondary btn-sm me-3">
@@ -28,7 +27,6 @@
         </div>
     </div>
     
-    <!-- Chat Messages -->
     <div class="card-body overflow-auto" id="chatMessages" style="height: calc(80vh - 180px);">
         <div id="messagesList">
             {% for message in messages %}
@@ -54,7 +52,7 @@
                         {% endif %}
                         
                         {% if message.content %}
-                        <p class="mb-0">{{ message.content|linebreaks }}</p>
+                        <p class="mb-0" style="white-space: pre-wrap;">{{ message.content }}</p>
                         {% endif %}
                         
                         <small class="{% if message.sender == user %}text-white-50{% else %}text-muted{% endif %} d-block mt-1">
@@ -67,24 +65,18 @@
         </div>
     </div>
     
-    <!-- Chat Input -->
     <div class="card-footer bg-white border-top">
         <form id="messageForm" class="d-flex gap-2" enctype="multipart/form-data">
             {% csrf_token %}
-            
             <label for="fileInput" class="btn btn-outline-secondary">
                 <i class="fas fa-paperclip"></i>
             </label>
             <input type="file" id="fileInput" name="file" class="d-none">
             
-            <input type="text" 
-                   id="messageInput" 
-                   name="content" 
-                   class="form-control" 
-                   placeholder="Xabar yozing..." 
-                   autocomplete="off">
+            <input type="text" id="messageInput" name="content" class="form-control" 
+                   placeholder="Xabar yozing..." autocomplete="off">
             
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" id="sendBtn" class="btn btn-primary">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </form>
@@ -102,157 +94,133 @@
 </div>
 
 <script>
-const chatMessages = document.getElementById('chatMessages');
-const messageForm = document.getElementById('messageForm');
-const messageInput = document.getElementById('messageInput');
-const fileInput = document.getElementById('fileInput');
-const filePreview = document.getElementById('filePreview');
-const fileName = document.getElementById('fileName');
-const messagesList = document.getElementById('messagesList');
+    // Global o'zgaruvchilar - Django qiymatlarini xavfsiz o'qib olish
+    const CURRENT_USER_ID = parseInt("{{ user.id }}");
+    const CHAT_ROOM_ID = "{{ chat_room.id }}";
+    const SEND_URL = "{% url 'send_message' chat_room.id %}";
+    const GET_URL = "{% url 'get_messages' chat_room.id %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
 
-// Scroll to bottom
-function scrollToBottom() {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
+    const chatMessages = document.getElementById('chatMessages');
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const messagesList = document.getElementById('messagesList');
+    
+    let lastMessageId = parseInt("{{ messages.last.id|default:0 }}");
 
-scrollToBottom();
-
-// File input handler
-fileInput.addEventListener('change', function() {
-    if (this.files.length > 0) {
-        fileName.textContent = this.files[0].name;
-        filePreview.classList.remove('d-none');
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-});
+    scrollToBottom();
 
-function clearFile() {
-    fileInput.value = '';
-    filePreview.classList.add('d-none');
-}
-
-// Send message
-messageForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(messageForm);
-    
-    fetch("{% url 'send_message' chat_room.id %}", {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const msg = data.message;
-            const isOwn = msg.sender_id === {{ user.id }};
-            
-            const messageHtml = `
-                <div class="mb-3 ${isOwn ? 'text-end' : ''}">
-                    <div class="d-inline-block" style="max-width: 70%;">
-                        ${!isOwn ? `
-                        <div class="d-flex align-items-start mb-1">
-                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2" 
-                                 style="width: 30px; height: 30px; min-width: 30px;">
-                                <small><strong>${msg.sender_name.split(' ').map(n => n[0]).join('')}</strong></small>
-                            </div>
-                            <strong class="small text-muted">${msg.sender_name}</strong>
-                        </div>
-                        ` : ''}
-                        
-                        <div class="p-3 rounded ${isOwn ? 'bg-primary text-white' : 'bg-light'}">
-                            ${msg.file_url ? `
-                            <div class="mb-2">
-                                <a href="${msg.file_url}" class="${isOwn ? 'text-white' : 'text-primary'}" download>
-                                    <i class="fas fa-file me-2"></i>Fayl
-                                </a>
-                            </div>
-                            ` : ''}
-                            
-                            ${msg.content ? `<p class="mb-0">${msg.content}</p>` : ''}
-                            
-                            <small class="${isOwn ? 'text-white-50' : 'text-muted'} d-block mt-1">
-                                ${msg.created_at}
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            messagesList.insertAdjacentHTML('beforeend', messageHtml);
-            messageInput.value = '';
-            clearFile();
-            scrollToBottom();
+    // Fayl tanlanganda ko'rinishi
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            fileName.textContent = this.files[0].name;
+            filePreview.classList.remove('d-none');
         }
     });
-});
 
-// Polling for new messages
-let lastMessageId = {{ messages.last.id|default:0 }};
+    function clearFile() {
+        fileInput.value = '';
+        filePreview.classList.add('d-none');
+    }
 
-function checkNewMessages() {
-    fetch(`{% url 'get_messages' chat_room.id %}?last_message_id=${lastMessageId}`)
+    // Xabarni ekranga chiqarish funksiyasi
+    function appendMessageToUI(msg, isNew = false) {
+        // Agar xabar allaqachon ekranda bo'lsa, qo'shmaymiz (takrorlanishga qarshi)
+        if (document.getElementById(`msg-${msg.id}`)) return;
+
+        const isOwn = msg.sender_id === CURRENT_USER_ID;
+        const initials = msg.sender_name.split(' ').map(n => n[0]).join('').toUpperCase();
+        
+        const messageHtml = `
+            <div class="mb-3 ${isOwn ? 'text-end' : ''}" id="msg-${msg.id}">
+                <div class="d-inline-block" style="max-width: 70%;">
+                    ${!isOwn ? `
+                    <div class="d-flex align-items-start mb-1">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2" 
+                             style="width: 30px; height: 30px; min-width: 30px;">
+                            <small><strong>${initials}</strong></small>
+                        </div>
+                        <strong class="small text-muted">${msg.sender_name}</strong>
+                    </div>
+                    ` : ''}
+                    <div class="p-3 rounded ${isOwn ? 'bg-primary text-white' : 'bg-light'}">
+                        ${msg.file_url ? `
+                        <div class="mb-2">
+                            <a href="${msg.file_url}" class="${isOwn ? 'text-white' : 'text-primary'}" download>
+                                <i class="fas fa-file me-2"></i>Fayl yuklash
+                            </a>
+                        </div>
+                        ` : ''}
+                        ${msg.content ? `<p class="mb-0" style="white-space: pre-wrap;">${msg.content}</p>` : ''}
+                        <small class="${isOwn ? 'text-white-50' : 'text-muted'} d-block mt-1">
+                            ${msg.created_at}
+                        </small>
+                    </div>
+                </div>
+            </div>`;
+        
+        messagesList.insertAdjacentHTML('beforeend', messageHtml);
+        if (isNew) scrollToBottom();
+    }
+
+    // Xabar yuborish
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!messageInput.value.trim() && !fileInput.files.length) return;
+
+        const formData = new FormData(messageForm);
+        
+        fetch(SEND_URL, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': CSRF_TOKEN }
+        })
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.messages.length > 0) {
-                data.messages.forEach(msg => {
-                    const isOwn = msg.sender_id === {{ user.id }};
-                    
-                    const messageHtml = `
-                        <div class="mb-3 ${isOwn ? 'text-end' : ''}">
-                            <div class="d-inline-block" style="max-width: 70%;">
-                                ${!isOwn ? `
-                                <div class="d-flex align-items-start mb-1">
-                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2" 
-                                         style="width: 30px; height: 30px; min-width: 30px;">
-                                        <small><strong>${msg.sender_name.split(' ').map(n => n[0]).join('')}</strong></small>
-                                    </div>
-                                    <strong class="small text-muted">${msg.sender_name}</strong>
-                                </div>
-                                ` : ''}
-                                
-                                <div class="p-3 rounded ${isOwn ? 'bg-primary text-white' : 'bg-light'}">
-                                    ${msg.file_url ? `
-                                    <div class="mb-2">
-                                        <a href="${msg.file_url}" class="${isOwn ? 'text-white' : 'text-primary'}" download>
-                                            <i class="fas fa-file me-2"></i>Fayl
-                                        </a>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${msg.content ? `<p class="mb-0">${msg.content}</p>` : ''}
-                                    
-                                    <small class="${isOwn ? 'text-white-50' : 'text-muted'} d-block mt-1">
-                                        ${msg.created_at}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    messagesList.insertAdjacentHTML('beforeend', messageHtml);
-                    lastMessageId = msg.id;
-                });
-                scrollToBottom();
+            if (data.success) {
+                lastMessageId = data.message.id; // Oxirgi ID ni darhol yangilaymiz
+                appendMessageToUI(data.message, true);
+                messageInput.value = '';
+                clearFile();
             }
         });
-}
+    });
 
-// Check every 3 seconds
-setInterval(checkNewMessages, 3000);
+    // Yangi xabarlarni tekshirish (Polling)
+    function checkNewMessages() {
+        fetch(`${GET_URL}?last_message_id=${lastMessageId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        appendMessageToUI(msg, true);
+                        lastMessageId = Math.max(lastMessageId, msg.id);
+                    });
+                }
+            });
+    }
+
+    // Har 3 soniyada serverdan so'rash
+    setInterval(checkNewMessages, 3000);
 </script>
 
 <style>
-#chatMessages {
-    background-image: 
-        linear-gradient(45deg, #f8f9fa 25%, transparent 25%),
-        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #f8f9fa 75%),
-        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-}
+    #chatMessages {
+        background-color: #e5ddd5; /* WhatsApp uslubidagi fon */
+        background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+    }
+    .card-footer {
+        padding: 15px;
+    }
+    #messageInput:focus {
+        box-shadow: none;
+        border-color: #0d6efd;
+    }
 </style>
-{% endblock %}F
+{% endblock %}
