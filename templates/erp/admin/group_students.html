@@ -1,0 +1,108 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'admin_groups' %}" class="btn btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-2"></i>Guruhlar
+    </a>
+    <h2 class="fw-bold">{{ group.name }} - O'quvchilar</h2>
+    <p class="text-muted">O'qituvchi: {{ group.teacher.get_full_name }}</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-users text-primary me-2"></i>
+                    Guruhdagi o'quvchilar ({{ students.count }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>F.I.O</th>
+                                <th>Username</th>
+                                <th>Qo'shilgan sana</th>
+                                <th>Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for gs in students %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong>{{ gs.student.get_full_name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ gs.student.username }}</span>
+                                </td>
+                                <td>{{ gs.joined_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'admin_remove_student' group.pk gs.student.pk %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('O\'quvchini guruhdan o\'chirmoqchimisiz?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted">Guruhda hali o'quvchilar yo'q</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-plus text-success me-2"></i>O'quvchi qo'shish
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">O'quvchini tanlang</label>
+                        {{ form.student }}
+                        {% if form.student.errors %}
+                        <div class="text-danger small mt-1">{{ form.student.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Qo'shish
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3 bg-light">
+            <div class="card-body">
+                <h6 class="fw-bold mb-2">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>Statistika
+                </h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Jami o'quvchilar:</span>
+                    <strong>{{ students.count }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

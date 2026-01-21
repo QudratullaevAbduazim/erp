@@ -1,0 +1,244 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="fw-bold">
+        Xush kelibsiz, {{ user.get_full_name }}!
+    </h1>
+    <p class="text-muted">{{ user.get_role_display }} paneli</p>
+</div>
+
+{% if user.role == 'admin' %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">Guruhlar</h6>
+                    <h2 class="fw-bold">{{ groups_count }}</h2>
+                </div>
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">O'quvchilar</h6>
+                    <h2 class="fw-bold">{{ students_count }}</h2>
+                </div>
+                <i class="fas fa-user-graduate"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">O'qituvchilar</h6>
+                    <h2 class="fw-bold">{{ teachers_count }}</h2>
+                </div>
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">Barcha foydalanuvchilar</h6>
+                    <h2 class="fw-bold">{{ groups_count|add:students_count|add:teachers_count }}</h2>
+                </div>
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-clock text-primary me-2"></i>So'nggi guruhlar
+            </h5>
+            <a href="{% url 'admin_groups' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye me-2"></i>Barchasini ko'rish
+            </a>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Guruh nomi</th>
+                        <th>O'qituvchi</th>
+                        <th>Yaratilgan sana</th>
+                        <th>Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in recent_groups %}
+                    <tr>
+                        <td><strong>{{ group.name }}</strong></td>
+                        <td>{{ group.teacher.get_full_name }}</td>
+                        <td>{{ group.created_at|date:"d.m.Y" }}</td>
+                        <td>
+                            <a href="{% url 'admin_edit_group' group.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'admin_group_students' group.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-users"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Guruhlar mavjud emas</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% elif user.role == 'teacher' %}
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">Mening guruhlarim</h6>
+                    <h2 class="fw-bold">{{ my_groups.count }}</h2>
+                </div>
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">Tekshirilmagan vazifalar</h6>
+                    <h2 class="fw-bold">{{ pending_submissions }}</h2>
+                </div>
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="fw-bold mb-4">
+            <i class="fas fa-users text-primary me-2"></i>Mening guruhlarim
+        </h5>
+        
+        <div class="row g-3">
+            {% for group in my_groups %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="fw-bold">{{ group.name }}</h6>
+                        <p class="text-muted small mb-3">{{ group.group_students.count }} o'quvchi</p>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'teacher_attendance' group.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-check me-2"></i>Davomat
+                            </a>
+                            <a href="{% url 'teacher_homeworks' group.pk %}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-tasks me-2"></i>Vazifalar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center text-muted">Guruhlar mavjud emas</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% elif user.role == 'student' %}
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">Mening guruhlarim</h6>
+                    <h2 class="fw-bold">{{ my_groups.count }}</h2>
+                </div>
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">Bajarilmagan vazifalar</h6>
+                    <h2 class="fw-bold">{{ pending_homeworks }}</h2>
+                </div>
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    {% for group in my_groups %}
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold">{{ group.name }}</h6>
+                <p class="text-muted small">O'qituvchi: {{ group.teacher.get_full_name }}</p>
+                <a href="{% url 'student_homeworks' group.pk %}" class="btn btn-sm btn-primary w-100">
+                    <i class="fas fa-tasks me-2"></i>Vazifalar
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>Siz hali hech qaysi guruhga qo'shilmagansiz
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% elif user.role == 'support_teacher' %}
+<div class="row g-4 mb-4">
+    <div class="col-md-12">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="opacity-75">Kutilayotgan so'rovlar</h6>
+                    <h2 class="fw-bold">{{ pending_requests }}</h2>
+                </div>
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="fw-bold mb-4">
+            <i class="fas fa-headset text-primary me-2"></i>Tezkor havolalar
+        </h5>
+        <a href="{% url 'support_requests_list' %}" class="btn btn-primary">
+            <i class="fas fa-list me-2"></i>Barcha so'rovlarni ko'rish
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

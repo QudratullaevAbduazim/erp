@@ -1,0 +1,165 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold">Support So'rovlari</h2>
+    <p class="text-muted">O'quvchilardan kelgan so'rovlarni ko'ring</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th width="50">#</th>
+                        <th>O'quvchi</th>
+                        <th>Mavzu</th>
+                        <th>Batafsil</th>
+                        <th>Rejalashtirilgan vaqt</th>
+                        <th>Holat</th>
+                        <th>Yuborilgan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                    <tr class="{% if request.status == 'pending' %}table-warning{% endif %}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3" 
+                                     style="width: 40px; height: 40px; min-width: 40px;">
+                                    <strong>{{ request.student.first_name|first }}{{ request.student.last_name|first }}</strong>
+                                </div>
+                                <div>
+                                    <strong>{{ request.student.get_full_name }}</strong>
+                                    <br><small class="text-muted">{{ request.student.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><strong>{{ request.topic }}</strong></td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#detailModal{{ request.id }}">
+                                <i class="fas fa-eye me-1"></i>Ko'rish
+                            </button>
+                        </td>
+                        <td>
+                            <div class="mb-1">
+                                <i class="fas fa-calendar text-primary me-1"></i>
+                                <strong>{{ request.scheduled_date|date:"d.m.Y" }}</strong>
+                            </div>
+                            <div>
+                                <i class="fas fa-clock text-info me-1"></i>
+                                <strong>{{ request.scheduled_time|time:"H:i" }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            {% if request.status == 'pending' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation-circle me-1"></i>Yangi
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Ko'rildi
+                                </span>
+                                {% if request.viewed_at %}
+                                <br><small class="text-muted">{{ request.viewed_at|date:"d.m H:i" }}</small>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ request.created_at|date:"d.m.Y H:i" }}</small>
+                        </td>
+                    </tr>
+                    
+                    <!-- Detail Modal -->
+                    <div class="modal fade" id="detailModal{{ request.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">
+                                        <i class="fas fa-info-circle text-primary me-2"></i>So'rov tafsilotlari
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <strong class="text-muted">O'quvchi:</strong>
+                                            <p class="mb-0">{{ request.student.get_full_name }}</p>
+                                            <small class="text-muted">{{ request.student.email }}</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong class="text-muted">Rejalashtirilgan vaqt:</strong>
+                                            <p class="mb-0">
+                                                <i class="fas fa-calendar me-1"></i>{{ request.scheduled_date|date:"d.m.Y" }}
+                                                <br>
+                                                <i class="fas fa-clock me-1"></i>{{ request.scheduled_time|time:"H:i" }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong class="text-muted">Mavzu:</strong>
+                                        <p class="fs-5 fw-bold text-primary">{{ request.topic }}</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong class="text-muted">Batafsil ma'lumot:</strong>
+                                        <div class="p-3 bg-light rounded mt-2">
+                                            {{ request.description|linebreaks }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong class="text-muted">So'rov yuborilgan:</strong>
+                                            <p>{{ request.created_at|date:"d.m.Y H:i" }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong class="text-muted">Holat:</strong>
+                                            <p>
+                                                {% if request.status == 'pending' %}
+                                                    <span class="badge bg-warning">Yangi so'rov</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Ko'rildi</span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Hali so'rovlar yo'q</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4 bg-light">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">
+            <i class="fas fa-info-circle text-primary me-2"></i>Ma'lumot
+        </h6>
+        <p class="mb-0 small">
+            Bu sahifada o'quvchilardan kelgan support so'rovlarini ko'rishingiz mumkin. 
+            So'rovni ochganingizda, u avtomatik ravishda "Ko'rildi" holatiga o'tadi. 
+            O'quvchilar sizning ularning so'rovini ko'rganingizni bilishadi.
+        </p>
+    </div>
+</div>
+{% endblock %}

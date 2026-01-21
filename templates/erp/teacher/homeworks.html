@@ -1,0 +1,75 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'teacher_groups' %}" class="btn btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left me-2"></i>Guruhlar
+        </a>
+        <h2 class="fw-bold">{{ group.name }} - Vazifalar</h2>
+    </div>
+    <a href="{% url 'teacher_create_homework' group.pk %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Yangi vazifa
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for homework in homeworks %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="fw-bold">{{ homework.title }}</h5>
+                    <span class="badge bg-primary">{{ homework.max_score }} ball</span>
+                </div>
+                
+                <p class="text-muted">{{ homework.description|truncatewords:20 }}</p>
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        Muddat: {{ homework.deadline|date:"d.m.Y H:i" }}
+                    </small>
+                </div>
+                
+                {% if homework.file %}
+                <div class="mb-3">
+                    <a href="{{ homework.file.url }}" class="btn btn-sm btn-outline-info" download>
+                        <i class="fas fa-download me-2"></i>Faylni yuklab olish
+                    </a>
+                </div>
+                {% endif %}
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'teacher_submissions' homework.pk %}" class="btn btn-sm btn-success flex-fill">
+                        <i class="fas fa-eye me-2"></i>
+                        Topshirilganlar ({{ homework.submissions.count }})
+                    </a>
+                    <a href="{% url 'teacher_edit_homework' homework.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    Yaratilgan: {{ homework.created_at|date:"d.m.Y H:i" }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-3">Hali vazifalar yo'q</p>
+                <a href="{% url 'teacher_create_homework' group.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Birinchi vazifani yarating
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold">
+            <i class="fas fa-comments text-primary me-2"></i>Xabarlar
+        </h2>
+        <p class="text-muted">Barcha chatlaringiz</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'users_list' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Yangi Chat
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for data in chat_data %}
+                    {% with room=data.room other=data.other_participant %}
+                    <a href="{% url 'chat_room' room.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="{% if room.room_type == 'group' %}bg-primary{% else %}bg-success{% endif %} rounded-circle d-flex align-items-center justify-content-center text-white" 
+                                     style="width: 50px; height: 50px;">
+                                    {% if room.room_type == 'group' %}
+                                        <i class="fas fa-users"></i>
+                                    {% else %}
+                                        {% if other %}
+                                        <strong>{{ other.first_name|first }}{{ other.last_name|first }}</strong>
+                                        {% else %}
+                                        <strong>C</strong>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-1 fw-bold">
+                                        {% if room.room_type == 'group' %}
+                                            {{ room.group.name }}
+                                            <span class="badge bg-primary ms-2">Guruh</span>
+                                        {% else %}
+                                            {% if other %}
+                                            {{ other.get_full_name }}
+                                            <span class="badge bg-success ms-2">{{ other.get_role_display }}</span>
+                                            {% else %}
+                                            {{ room.name }}
+                                            <span class="badge bg-success ms-2">Shaxsiy</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </h6>
+                                    
+                                    {% if room.unread_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">{{ room.unread_count }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% with last_msg=room.get_last_message %}
+                                {% if last_msg %}
+                                <p class="mb-0 text-muted small">
+                                    <strong>{{ last_msg.sender.first_name }}:</strong> 
+                                    {{ last_msg.content|truncatewords:10 }}
+                                </p>
+                                <small class="text-muted">{{ last_msg.created_at|timesince }} oldin</small>
+                                {% else %}
+                                <p class="mb-0 text-muted small">Xabarlar yo'q</p>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endwith %}
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Hali chatlar yo'q</p>
+                        <a href="{% url 'users_list' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Birinchi chatni boshlang
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 1rem 1.5rem;
+    transition: all 0.3s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+</style>
+{% endblock %}

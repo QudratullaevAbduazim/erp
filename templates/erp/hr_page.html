@@ -1,0 +1,195 @@
+{% extends 'erp/base.html' %}
+
+{% block title %}HR | Bo'sh ish o'rinlari{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Sizning root ranglaringizdan foydalanilgan maxsus stillar */
+    .hr-hero-banner {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 20px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+    }
+    .job-list-card {
+        border: 1px solid var(--light);
+        border-radius: 15px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    .job-list-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    .benefit-item {
+        padding: 15px;
+        border-radius: 12px;
+        background: var(--light);
+        height: 100%;
+    }
+    .benefit-item i {
+        color: var(--primary);
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animate__animated animate__fadeIn">
+    <div class="hr-hero-banner shadow-sm">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="fw-bold mb-3">Bizning jamoaga qo'shiling!</h1>
+                <p class="lead mb-0 opacity-90">ERP tizimini yangi bosqichga olib chiqishda o'z hissangizni qo'shing. Biz iqtidorlarni qadrlaymiz.</p>
+            </div>
+            <div class="col-md-4 text-center d-none d-md-block">
+                <i class="fas fa-users-rays fa-5x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3 col-6">
+            <div class="benefit-item text-center">
+                <i class="fas fa-rocket"></i>
+                <h6 class="fw-bold mb-1">Tez o'sish</h6>
+                <p class="small text-muted mb-0">Karyera ko'tarilishi</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="benefit-item text-center">
+                <i class="fas fa-umbrella-beach"></i>
+                <h6 class="fw-bold mb-1">Dam olish</h6>
+                <p class="small text-muted mb-0">Yillik mehnat ta'tili</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="benefit-item text-center">
+                <i class="fas fa-graduation-cap"></i>
+                <h6 class="fw-bold mb-1">Ta'lim</h6>
+                <p class="small text-muted mb-0">Kurslar kompaniya hisobidan</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="benefit-item text-center">
+                <i class="fas fa-coffee"></i>
+                <h6 class="fw-bold mb-1">Qulaylik</h6>
+                <p class="small text-muted mb-0">Zamonaviy ofis va kofe</p>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="fw-bold mb-4 d-flex align-items-center">
+        <span class="bg-primary p-2 rounded me-3" style="width: 10px; height: 30px;"></span>
+        Ochiq vakansiyalar
+    </h4>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="job-list-card">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="fw-bold text-dark mb-1">Senior Backend Developer</h5>
+                        <div class="d-flex gap-3 text-muted small">
+                            <span><i class="fas fa-map-marker-alt me-1"></i> Toshkent</span>
+                            <span><i class="fas fa-briefcase me-1"></i> Full-time</span>
+                            <span class="text-success fw-bold"><i class="fas fa-money-bill-wave me-1"></i> $1500 - $2500</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                        <button class="btn btn-outline-primary px-4 rounded-pill me-2" data-bs-toggle="collapse" data-bs-target="#jobDesc1">Batafsil</button>
+                        <button class="btn btn-primary px-4 rounded-pill" onclick="applyJob('Senior Backend Developer')">Topshirish</button>
+                    </div>
+                </div>
+                <div class="collapse mt-3" id="jobDesc1">
+                    <hr>
+                    <div class="small text-muted">
+                        <h6>Talablar:</h6>
+                        <ul>
+                            <li>Python/Django bo'yicha 3+ yillik tajriba</li>
+                            <li>PostgreSQL va Redis bilan ishlash</li>
+                            <li>REST API va Docker bilimlar</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="job-list-card">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="fw-bold text-dark mb-1">Middle UI/UX Designer</h5>
+                        <div class="d-flex gap-3 text-muted small">
+                            <span><i class="fas fa-map-marker-alt me-1"></i> Masofaviy</span>
+                            <span><i class="fas fa-clock me-1"></i> Part-time</span>
+                            <span class="text-success fw-bold"><i class="fas fa-money-bill-wave me-1"></i> $800 - $1200</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                        <button class="btn btn-outline-primary px-4 rounded-pill me-2" data-bs-toggle="collapse" data-bs-target="#jobDesc2">Batafsil</button>
+                        <button class="btn btn-primary px-4 rounded-pill" onclick="applyJob('UI/UX Designer')">Topshirish</button>
+                    </div>
+                </div>
+                <div class="collapse mt-3" id="jobDesc2">
+                    <hr>
+                    <div class="small text-muted">
+                        <h6>Talablar:</h6>
+                        <ul>
+                            <li>Figma va Adobe paketlari</li>
+                            <li>ERP tizimlari uchun dizayn tajribasi</li>
+                            <li>User Flow va Wireframe'lar yaratish</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="applyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="jobName">Ariza topshirish</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="applyForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Ismingiz</label>
+                        <input type="text" class="form-control" placeholder="Aziz Rahimov" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Telefon</label>
+                        <input type="tel" class="form-control" placeholder="+998" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">CV (PDF)</label>
+                        <input type="file" class="form-control" accept=".pdf">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Yuborish</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function applyJob(title) {
+        document.getElementById('jobName').innerText = title + " uchun ariza";
+        new bootstrap.Modal(document.getElementById('applyModal')).show();
+    }
+
+    document.getElementById('applyForm').onsubmit = function(e) {
+        e.preventDefault();
+        alert("Arizangiz qabul qilindi!");
+        bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'student_groups' %}" class="btn btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-2"></i>Guruhlar
+    </a>
+    <h2 class="fw-bold">{{ group.name }} - Vazifalar</h2>
+    <p class="text-muted">O'qituvchi: {{ group.teacher.get_full_name }}</p>
+</div>
+
+<div class="row g-4">
+    {% for homework in homeworks %}
+    {% with submission=homework.submissions.all|first %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="fw-bold">{{ homework.title }}</h5>
+                    <div>
+                        {% if submission %}
+                            {% if submission.status == 'pending' %}
+                                <span class="badge bg-warning">Tekshirilmoqda</span>
+                            {% elif submission.status == 'graded' %}
+                                <span class="badge bg-success">{{ submission.score }}/{{ homework.max_score }}</span>
+                            {% elif submission.status == 'rejected' %}
+                                <span class="badge bg-danger">Rad etildi</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">Topshirilmagan</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <p class="text-muted">{{ homework.description|truncatewords:20 }}</p>
+                
+                <div class="mb-3">
+                    <small class="{% if homework.deadline < now %}text-danger{% else %}text-muted{% endif %}">
+                        <i class="fas fa-clock me-1"></i>
+                        Muddat: {{ homework.deadline|date:"d.m.Y H:i" }}
+                        {% if homework.deadline < now %}
+                            <br><strong class="text-danger">⚠️ Muddat o'tgan!</strong>
+                        {% endif %}
+                    </small>
+                </div>
+                
+                {% if homework.file %}
+                <div class="mb-3">
+                    <a href="{{ homework.file.url }}" class="btn btn-sm btn-outline-info" download>
+                        <i class="fas fa-download me-2"></i>Vazifa fayli
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if submission %}
+                <div class="alert alert-info small mb-3">
+                    <strong>Topshirilgan:</strong> {{ submission.submitted_at|date:"d.m.Y H:i" }}
+                    {% if submission.feedback %}
+                    <br><strong>O'qituvchi izohi:</strong> {{ submission.feedback }}
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="d-grid">
+                    <a href="{% url 'student_submit_homework' homework.pk %}" class="btn {% if submission and submission.status == 'graded' %}btn-outline-primary{% else %}btn-primary{% endif %}">
+                        <i class="fas fa-upload me-2"></i>
+                        {% if submission %}
+                            {% if submission.status == 'rejected' %}
+                                Qayta topshirish
+                            {% else %}
+                                Ko'rish / Tahrirlash
+                            {% endif %}
+                        {% else %}
+                            Topshirish
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    Maksimal: {{ homework.max_score }} ball
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Hali vazifalar yo'q</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

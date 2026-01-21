@@ -1,0 +1,121 @@
+{% extends "erp/base.html" %}
+
+{% block content %}
+<div class="container-fluid animate__animated animate__fadeIn">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 text-center p-4">
+                <div class="profile-image-wrapper mb-3 position-relative d-inline-block mx-auto">
+                    <div class="profile-icon bg-primary rounded-circle d-flex align-items-center justify-content-center overflow-hidden shadow" 
+                         style="width: 150px; height: 150px; margin: 0 auto;">
+                        {% if user.image %}
+                            <img src="{{ user.image.url }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="fas fa-user fa-4x text-white"></i>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    {% if user.role == 'ADMIN' %}
+                        <span class="badge bg-danger px-3 py-2 rounded-pill">Administrator</span>
+                    {% elif user.role == 'TEACHER' %}
+                        <span class="badge bg-primary px-3 py-2 rounded-pill">O'qituvchi</span>
+                    {% elif user.role == 'SUPPORT' %}
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Support</span>
+                    {% else %}
+                        <span class="badge bg-success px-3 py-2 rounded-pill">O'quvchi</span>
+                    {% endif %}
+                </div>
+                
+                <h4 class="fw-bold mt-2">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted small">{{ user.email }}</p>
+                <hr>
+                
+                <div class="row text-center mt-3">
+                    {% if user.role == 'STUDENT' %}
+                        <div class="col-6">
+                            <h5 class="mb-0 fw-bold text-primary">{{ total_submissions }}</h5>
+                            <small class="text-muted">Topshirilgan</small>
+                        </div>
+                        <div class="col-6 border-start">
+                            <h5 class="mb-0 fw-bold text-danger">{{ rejected_homeworks }}</h5>
+                            <small class="text-muted">Rad etilgan</small>
+                        </div>
+                    {% elif user.role == 'TEACHER' %}
+                        <div class="col-12 text-center">
+                            <h5 class="mb-0 fw-bold text-primary">{{ my_groups_count }}</h5>
+                            <small class="text-muted">Guruhlarim soni</small>
+                        </div>
+                    {% elif user.role == 'SUPPORT' %}
+                        <div class="col-12 text-center">
+                            <h5 class="mb-0 fw-bold text-primary">{{ total_requests }}</h5>
+                            <small class="text-muted">Kelgan so'rovlar</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 p-4">
+                <h4 class="fw-bold mb-4 d-flex align-items-center">
+                    <i class="fas fa-user-edit text-primary me-2"></i> Shaxsiy ma'lumotlar
+                </h4>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold small text-muted">Profil rasmini yangilash</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-image"></i></span>
+                                {{ form.image }} </div>
+                            {% if form.image.errors %}
+                                <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Ism</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Familiya</label>
+                            {{ form.last_name }}
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted">Email manzili</label>
+                            {{ form.email }}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex justify-content-between align-items-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4 border">
+                            <i class="fas fa-arrow-left me-2"></i> Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                            Saqlash <i class="fas fa-save ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control {
+        border-radius: 10px !important;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+    }
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .badge { font-weight: 600; }
+    .card { border-radius: 20px; }
+</style>
+{% endblock %}

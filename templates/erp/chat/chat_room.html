@@ -1,0 +1,258 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="card" style="height: 80vh;">
+    <!-- Chat Header -->
+    <div class="card-header bg-white border-bottom">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'chat_list' %}" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            
+            <div class="flex-grow-1">
+                <h5 class="mb-0 fw-bold">
+                    {% if chat_room.room_type == 'group' %}
+                        <i class="fas fa-users text-primary me-2"></i>
+                        {{ chat_room.group.name }}
+                        <span class="badge bg-primary ms-2">Guruh Chat</span>
+                    {% else %}
+                        <i class="fas fa-user text-success me-2"></i>
+                        {{ other_participant.get_full_name }}
+                        <span class="badge bg-success ms-2">{{ other_participant.get_role_display }}</span>
+                    {% endif %}
+                </h5>
+                <small class="text-muted">
+                    {{ chat_room.participants.count }} ishtirokchi
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chat Messages -->
+    <div class="card-body overflow-auto" id="chatMessages" style="height: calc(80vh - 180px);">
+        <div id="messagesList">
+            {% for message in messages %}
+            <div class="mb-3 {% if message.sender == user %}text-end{% endif %}">
+                <div class="d-inline-block" style="max-width: 70%;">
+                    {% if message.sender != user %}
+                    <div class="d-flex align-items-start mb-1">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2" 
+                             style="width: 30px; height: 30px; min-width: 30px;">
+                            <small><strong>{{ message.sender.first_name|first }}{{ message.sender.last_name|first }}</strong></small>
+                        </div>
+                        <strong class="small text-muted">{{ message.sender.get_full_name }}</strong>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="p-3 rounded {% if message.sender == user %}bg-primary text-white{% else %}bg-light{% endif %}">
+                        {% if message.file %}
+                        <div class="mb-2">
+                            <a href="{{ message.file.url }}" class="{% if message.sender == user %}text-white{% else %}text-primary{% endif %}" download>
+                                <i class="fas fa-file me-2"></i>{{ message.file.name|slice:"16:" }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if message.content %}
+                        <p class="mb-0">{{ message.content|linebreaks }}</p>
+                        {% endif %}
+                        
+                        <small class="{% if message.sender == user %}text-white-50{% else %}text-muted{% endif %} d-block mt-1">
+                            {{ message.created_at|time:"H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Chat Input -->
+    <div class="card-footer bg-white border-top">
+        <form id="messageForm" class="d-flex gap-2" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <label for="fileInput" class="btn btn-outline-secondary">
+                <i class="fas fa-paperclip"></i>
+            </label>
+            <input type="file" id="fileInput" name="file" class="d-none">
+            
+            <input type="text" 
+                   id="messageInput" 
+                   name="content" 
+                   class="form-control" 
+                   placeholder="Xabar yozing..." 
+                   autocomplete="off">
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+        
+        <div id="filePreview" class="mt-2 d-none">
+            <small class="text-muted">
+                <i class="fas fa-file me-2"></i>
+                <span id="fileName"></span>
+                <button type="button" class="btn btn-sm btn-link text-danger" onclick="clearFile()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const messageForm = document.getElementById('messageForm');
+const messageInput = document.getElementById('messageInput');
+const fileInput = document.getElementById('fileInput');
+const filePreview = document.getElementById('filePreview');
+const fileName = document.getElementById('fileName');
+const messagesList = document.getElementById('messagesList');
+
+// Scroll to bottom
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+scrollToBottom();
+
+// File input handler
+fileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+        fileName.textContent = this.files[0].name;
+        filePreview.classList.remove('d-none');
+    }
+});
+
+function clearFile() {
+    fileInput.value = '';
+    filePreview.classList.add('d-none');
+}
+
+// Send message
+messageForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(messageForm);
+    
+    fetch("{% url 'send_message' chat_room.id %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const msg = data.message;
+            const isOwn = msg.sender_id === {{ user.id }};
+            
+            const messageHtml = `
+                <div class="mb-3 ${isOwn ? 'text-end' : ''}">
+                    <div class="d-inline-block" style="max-width: 70%;">
+                        ${!isOwn ? `
+                        <div class="d-flex align-items-start mb-1">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2" 
+                                 style="width: 30px; height: 30px; min-width: 30px;">
+                                <small><strong>${msg.sender_name.split(' ').map(n => n[0]).join('')}</strong></small>
+                            </div>
+                            <strong class="small text-muted">${msg.sender_name}</strong>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="p-3 rounded ${isOwn ? 'bg-primary text-white' : 'bg-light'}">
+                            ${msg.file_url ? `
+                            <div class="mb-2">
+                                <a href="${msg.file_url}" class="${isOwn ? 'text-white' : 'text-primary'}" download>
+                                    <i class="fas fa-file me-2"></i>Fayl
+                                </a>
+                            </div>
+                            ` : ''}
+                            
+                            ${msg.content ? `<p class="mb-0">${msg.content}</p>` : ''}
+                            
+                            <small class="${isOwn ? 'text-white-50' : 'text-muted'} d-block mt-1">
+                                ${msg.created_at}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            messagesList.insertAdjacentHTML('beforeend', messageHtml);
+            messageInput.value = '';
+            clearFile();
+            scrollToBottom();
+        }
+    });
+});
+
+// Polling for new messages
+let lastMessageId = {{ messages.last.id|default:0 }};
+
+function checkNewMessages() {
+    fetch(`{% url 'get_messages' chat_room.id %}?last_message_id=${lastMessageId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.messages.length > 0) {
+                data.messages.forEach(msg => {
+                    const isOwn = msg.sender_id === {{ user.id }};
+                    
+                    const messageHtml = `
+                        <div class="mb-3 ${isOwn ? 'text-end' : ''}">
+                            <div class="d-inline-block" style="max-width: 70%;">
+                                ${!isOwn ? `
+                                <div class="d-flex align-items-start mb-1">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2" 
+                                         style="width: 30px; height: 30px; min-width: 30px;">
+                                        <small><strong>${msg.sender_name.split(' ').map(n => n[0]).join('')}</strong></small>
+                                    </div>
+                                    <strong class="small text-muted">${msg.sender_name}</strong>
+                                </div>
+                                ` : ''}
+                                
+                                <div class="p-3 rounded ${isOwn ? 'bg-primary text-white' : 'bg-light'}">
+                                    ${msg.file_url ? `
+                                    <div class="mb-2">
+                                        <a href="${msg.file_url}" class="${isOwn ? 'text-white' : 'text-primary'}" download>
+                                            <i class="fas fa-file me-2"></i>Fayl
+                                        </a>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${msg.content ? `<p class="mb-0">${msg.content}</p>` : ''}
+                                    
+                                    <small class="${isOwn ? 'text-white-50' : 'text-muted'} d-block mt-1">
+                                        ${msg.created_at}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    messagesList.insertAdjacentHTML('beforeend', messageHtml);
+                    lastMessageId = msg.id;
+                });
+                scrollToBottom();
+            }
+        });
+}
+
+// Check every 3 seconds
+setInterval(checkNewMessages, 3000);
+</script>
+
+<style>
+#chatMessages {
+    background-image: 
+        linear-gradient(45deg, #f8f9fa 25%, transparent 25%),
+        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f8f9fa 75%),
+        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+</style>
+{% endblock %}F

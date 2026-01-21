@@ -1,0 +1,109 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'chat_list' %}" class="btn btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-2"></i>Chatlar
+    </a>
+    <h2 class="fw-bold">
+        <i class="fas fa-users text-primary me-2"></i>Yangi Chat Boshlash
+    </h2>
+    <p class="text-muted">Kim bilan chat boshlashni tanlang</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for person in users %}
+                    <a href="{% url 'create_private_chat' person.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3" 
+                                 style="width: 50px; height: 50px;">
+                                <strong>{{ person.first_name|first }}{{ person.last_name|first }}</strong>
+                            </div>
+                            
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">
+                                    {{ person.get_full_name }}
+                                </h6>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-secondary">{{ person.get_role_display }}</span>
+                                    <small class="text-muted">@{{ person.username }}</small>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Hozircha chat boshlash uchun foydalanuvchilar yo'q</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="fas fa-info-circle text-primary me-2"></i>Ma'lumot
+                </h6>
+                <p class="small mb-0">
+                    Bu yerda siz bilan bir guruhda bo'lgan yoki bog'liq foydalanuvchilar ko'rsatilgan. 
+                    Ular bilan shaxsiy chat boshlash uchun istalganini tanlang.
+                </p>
+            </div>
+        </div>
+        
+        {% if user.role == 'student' or user.role == 'teacher' %}
+        <div class="card mt-3">
+            <div class="card-header bg-white">
+                <h6 class="fw-bold mb-0">
+                    <i class="fas fa-users text-primary me-2"></i>Guruh Chatlari
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% if user.role == 'student' %}
+                        {% for group in user.groupstudent_set.all %}
+                        <a href="{% url 'group_chat' group.group.id %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            {{ group.group.name }}
+                        </a>
+                        {% endfor %}
+                    {% elif user.role == 'teacher' %}
+                        {% for group in user.teaching_groups.all %}
+                        <a href="{% url 'group_chat' group.id %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            {{ group.name }}
+                        </a>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    transition: all 0.3s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+</style>
+{% endblock %}

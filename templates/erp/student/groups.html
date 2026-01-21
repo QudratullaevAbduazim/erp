@@ -1,0 +1,62 @@
+{% extends 'erp/base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold">Mening Guruhlarim</h2>
+    <p class="text-muted">Siz a'zo bo'lgan guruhlar</p>
+</div>
+
+<div class="row g-4">
+    {% for group in groups %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">{{ group.name }}</h5>
+                
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
+                        <small class="text-muted">O'qituvchi:</small>
+                    </div>
+                    <strong>{{ group.teacher.get_full_name }}</strong>
+                </div>
+                
+                {% if group.description %}
+                <p class="text-muted small mb-3">{{ group.description|truncatewords:15 }}</p>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-users me-1"></i>
+                        {{ group.group_students.count }} o'quvchi
+                    </small>
+                </div>
+                
+                <div class="d-grid">
+                    <a href="{% url 'student_homeworks' group.pk %}" class="btn btn-primary">
+                        <i class="fas fa-tasks me-2"></i>Vazifalar
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    Qo'shilgan: {{ group.created_at|date:"d.m.Y" }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-3">Siz hali hech qaysi guruhga qo'shilmagansiz</p>
+                <small class="text-muted">Administrator sizni guruhga qo'shishi kerak</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
