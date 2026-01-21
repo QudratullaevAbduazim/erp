@@ -14,7 +14,6 @@ def login_view(request):
         return redirect('dashboard')
         
     if request.method == 'POST':
-        # Input nomlarini aniq ko'rsatamiz
         u_name = request.POST.get('username')
         p_word = request.POST.get('password')
         
@@ -63,7 +62,6 @@ def dashboard(request):
     
     return render(request, 'erp/dashboard.html', context)
 
-# Admin Views
 @login_required
 def admin_groups(request):
     if request.user.role != 'admin':
@@ -137,7 +135,6 @@ def admin_remove_student(request, group_pk, student_pk):
     messages.success(request, 'O\'quvchi guruhdan o\'chirildi!')
     return redirect('admin_group_students', pk=group_pk)
 
-# Teacher Views
 @login_required
 def teacher_groups(request):
     if request.user.role != 'teacher':
@@ -159,11 +156,8 @@ def teacher_attendance(request, pk):
     today = timezone.now().date()
     
     if request.method == 'POST':
-        # Sanani POSTdan olamiz
         raw_date = request.POST.get('date')
         
-        # Matn ko'rinishidagi sanani Django date obyektiga o'giramiz
-        # Agar sana noto'g'ri formatda kelsa, bugungi sanani oladi
         attendance_date = parse_date(raw_date) if raw_date else today
         
         if not attendance_date:
@@ -175,7 +169,7 @@ def teacher_attendance(request, pk):
                 Attendance.objects.update_or_create(
                     group=group, 
                     student=gs.student, 
-                    date=attendance_date, # Endi bu xavfsiz formatda
+                    date=attendance_date, 
                     defaults={
                         'status': status, 
                         'created_by': request.user
@@ -184,7 +178,6 @@ def teacher_attendance(request, pk):
         messages.success(request, 'Davomat saqlandi!')
         return redirect('teacher_attendance', pk=pk)
     
-    # GET so'rovi uchun davomatni olish
     attendances = Attendance.objects.filter(group=group, date=today)
     return render(request, 'erp/teacher/attendance.html', {
         'group': group, 
@@ -267,7 +260,6 @@ def teacher_grade_submission(request, pk):
         form = GradeSubmissionForm(instance=submission)
     return render(request, 'erp/teacher/grade_form.html', {'form': form, 'submission': submission})
 
-# Student Views
 @login_required
 def student_groups(request):
     if request.user.role != 'student':
@@ -330,7 +322,6 @@ def student_support_requests(request):
     
     return render(request, 'erp/student/support_requests.html', {'requests': requests_list, 'form': form})
 
-# Support Teacher Views
 @login_required
 def support_requests_list(request):
     if request.user.role != 'support_teacher':
@@ -338,10 +329,8 @@ def support_requests_list(request):
     
     requests_list = SupportRequest.objects.filter(support_teacher=request.user)
     
-    # Kutilayotganlar sonini hisoblab olamiz
     pending_count = requests_list.filter(status='pending').count()
     
-    # Mark as viewed when opened
     for req in requests_list.filter(status='pending'):
         req.status = 'viewed'
         req.viewed_at = timezone.now()
@@ -349,7 +338,7 @@ def support_requests_list(request):
     
     return render(request, 'erp/support/requests.html', {
         'requests': requests_list,
-        'pending_count': pending_count # Buni ham yuboramiz
+        'pending_count': pending_count 
     })
     
     
@@ -364,23 +353,19 @@ class ProfileView(LoginRequiredMixin, View):
     def get(self, request):
         form = UserUpdateForm(instance=request.user)
         
-        # Rolga qarab qo'shimcha ma'lumotlar yig'ish
         context = {
             'form': form,
             'user': request.user,
         }
 
         if request.user.role == 'STUDENT':
-            # Talaba uchun: Nechta vazifa topshirgan va nechta rad etilgan
             context['total_submissions'] = HomeworkSubmission.objects.filter(student=request.user).count()
             context['rejected_homeworks'] = HomeworkSubmission.objects.filter(student=request.user, status='rejected').count()
 
         elif request.user.role == 'TEACHER':
-            # O'qituvchi uchun: U biriktirilgan guruhlar soni
             context['my_groups_count'] = request.user.teacher_groups.count() # related_name'ga qarab
             
         elif request.user.role == 'SUPPORT':
-            # Support uchun: Unga kelgan jami zaproslar
             context['total_requests'] = SupportRequest.objects.filter(support_teacher=request.user).count()
 
         return render(request, 'erp/profile.html', context)
@@ -396,5 +381,4 @@ class ProfileView(LoginRequiredMixin, View):
     
 class HRView(View):
     def get(self, request):
-        # HR uchun maxsus dashboard yoki ma'lumotlar
         return render(request, 'erp/hr_page.html')
